@@ -144,6 +144,11 @@ protected:
 	std::vector<vec3> trash_boxes_translations;
 	std::vector<quat> trash_box_rotations;
 
+	// store boundingbox of trashbin
+	std::vector<vec3> redbox;
+	std::vector<vec3> greenbox;
+	std::vector<vec3> bluebox;
+
 	// store the movable boxes
 	std::vector<box3> movable_boxes;
 	std::vector<rgb> movable_box_colors;
@@ -151,6 +156,7 @@ protected:
 	std::vector<quat> movable_box_rotations;
 	std::vector<std::string> movable_box_id;
 	std::vector<int> movable_box_type;
+	std::vector<bool> is_in_trashbin;
 
 	// store the lego boxes
 	std::vector<box3> lego_boxes;
@@ -278,6 +284,10 @@ public:
 	void send_selection(std::string box_id);
 
 	Selection obtainSelection(std::string box_id);
+
+	void is_in_the_trashbin(int bi);
+
+	void box_corners(const box3& b, const vec3& translation, const quat& rotation, vec3* points);
 	protected:
 
 	void resize_box(int box_index, vec3 extends);

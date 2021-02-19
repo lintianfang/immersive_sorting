@@ -1514,7 +1514,9 @@ void vr_cobotics::keeplisten()
 					{
 						is_trashbin = true;
 						if (is_trashbin)
+						{
 							construct_trash_bin(clr, object.size().length(), object.size().width(), 0.01f, object.size().height(), trans.x(), trans.y(), trans.z());
+						}
 						movable_box_type.emplace_back(2);
 						std::cout << "this is a trash bin" << std::endl;
 					}
@@ -1567,6 +1569,32 @@ void vr_cobotics::send_selection(std::string box_id)
 		// who() is the name of the nng function that produced the error
 		// what() is a description of the error code
 		printf("%s: %s\n", e.who(), e.what());
+	}
+}
+
+void vr_cobotics::is_in_the_trashbin(int bi)
+{
+	std::vector<vec3> pnts_a(8);
+	for (int i = 0; i < 8; ++i)
+	{
+		box_corners(movable_boxes.at(bi), movable_box_translations.at(bi), movable_box_rotations.at(bi), pnts_a.data());
+	}
+}
+// obtain 8 vertex of the box
+void vr_cobotics::box_corners(const box3& b, const vec3& translation, const quat& rotation, vec3* points)
+{
+	vec3& min_pnt = points[0] = b.get_min_pnt();
+	vec3& max_pnt = points[7] = b.get_max_pnt();
+	vec3 extent = b.get_extent();
+	points[1] = vec3(max_pnt.x(), min_pnt.y(), min_pnt.z());
+	points[2] = vec3(min_pnt.x(), max_pnt.y(), min_pnt.z());
+	points[3] = vec3(max_pnt.x(), max_pnt.y(), min_pnt.z());
+	points[4] = vec3(min_pnt.x(), min_pnt.y(), max_pnt.z());
+	points[5] = vec3(max_pnt.x(), min_pnt.y(), max_pnt.z());
+	points[6] = vec3(min_pnt.x(), max_pnt.y(), max_pnt.z());
+	//transform points to global
+	for (int i = 0; i < 8; ++i) {
+		points[i] = rotation.get_rotated(points[i]) + translation;
 	}
 }
 
