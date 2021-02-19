@@ -150,6 +150,14 @@ protected:
 	std::vector<vec3> movable_box_translations;
 	std::vector<quat> movable_box_rotations;
 	std::vector<std::string> movable_box_id;
+	std::vector<int> movable_box_type;
+
+	// store the lego boxes
+	std::vector<box3> lego_boxes;
+	std::vector<rgb> lego_box_colors;
+	std::vector<vec3> lego_box_translations;
+	std::vector<quat> lego_box_rotations;
+	//std::vector<std::string> lego_box_id;
 
 	// store the wireframe boxes
 	std::vector<box3> frame_boxes;
@@ -197,8 +205,13 @@ protected:
 
 	vr_kit_skybox* skybox_kit;
 
-	point_cloud* redbox, * greenbox, * bluebox;
+	//point_cloud* redbox, * greenbox, * bluebox;
 	mesh_type redM, greenM, blueM;
+
+	bool show_surface = true;
+    bool show_wireframe = true;
+    bool show_vertices = true;
+
 public:
 	// define listenning address and sending address
 	std::string listen_address;
@@ -219,7 +232,7 @@ public:
 	/// construct boxes that represent a table of dimensions tw,td,th and leg width tW
 	void construct_movable_boxes(float tw, float td, float th, float tW, size_t nr);
 	/// construct trash bin
-	void construct_trash_bin(float cw, float cd, float ch, float cH, float x, float y, float z);
+	void construct_trash_bin(rgb trash_bin_clr, float cw, float cd, float ch, float cH, float x, float y, float z);
 	/// construct a scene with a table
 	void build_scene(float w, float d, float h, float W, float tw, float td, float th, float tW, float cw, float cd, float ch, float cH, float x, float y, float z);
 public:
@@ -273,6 +286,7 @@ public:
 	void on_load_movable_boxes_cb();
 	void on_load_wireframe_boxes_cb();
 	void clear_movable_boxes();
+	void clear_lego_boxes();
 	void clear_frame_boxes();
 	void clear_table_boxes();
 	void update_intersections();

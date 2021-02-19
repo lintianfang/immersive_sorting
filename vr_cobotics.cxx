@@ -201,34 +201,32 @@ void vr_cobotics::construct_movable_boxes(float tw, float td, float th, float tW
 	}
 }
 /// construct a trash bin 
-void vr_cobotics::construct_trash_bin(float cw, float cd, float ch, float cH, float x, float y, float z)
+void vr_cobotics::construct_trash_bin(rgb trash_bin_clr,float cw, float cd, float ch, float cH, float x, float y, float z)
 {
-	rgb trash_bin_clr(0.8f, 0.7f, 0.7f);
-	boxes.push_back(box3(vec3(-0.5f * cw + x, 0 + y, -0.5f * cd + z), vec3(0.5f * cw + x, ch + y, 0.5f * cd + z)));
+	boxes.push_back(box3(vec3(-0.5f * cw + x, 0 + y - 0.5 * cH, -0.5f * cd + z), vec3(0.5f * cw + x, ch + y - 0.5 * cH, 0.5f * cd + z)));
 	box_colors.push_back(trash_bin_clr);
 
-	boxes.push_back(box3(vec3(-0.5f * cw + x, 0 + y, -0.5f * cd + z), vec3(-0.5f * cw - ch + x, cH + y, 0.5f * cd + z)));
+	boxes.push_back(box3(vec3(-0.5f * cw + x, 0 + y - 0.5 * cH, -0.5f * cd + z), vec3(-0.5f * cw - ch + x, 0.5 * cH + y, 0.5f * cd + z)));
 	box_colors.push_back(trash_bin_clr);
 
-	boxes.push_back(box3(vec3(0.5f * cw - ch + x, 0 + y, -0.5f * cd + z), vec3(0.5f * cw + x, cH + y, 0.5f * cd + z)));
+	boxes.push_back(box3(vec3(0.5f * cw - ch + x, 0 + y - 0.5 * cH, -0.5f * cd + z), vec3(0.5f * cw + x, 0.5 * cH + y, 0.5f * cd + z)));
 	box_colors.push_back(trash_bin_clr);
 
-	boxes.push_back(box3(vec3(-0.5f * cw + x, 0 + y, -0.5f * cd + z), vec3(0.5f * cw + x, cH + y, -0.5f * cd + ch + z)));
+	boxes.push_back(box3(vec3(-0.5f * cw + x, 0 + y - 0.5 * cH, -0.5f * cd + z), vec3(0.5f * cw + x, 0.5 * cH + y, -0.5f * cd + ch + z)));
 	box_colors.push_back(trash_bin_clr);
 
-	boxes.push_back(box3(vec3(-0.5f * cw - ch + x, 0 + y, 0.5f * cd + ch + z), vec3(0.5f * cw + x, cH + y, 0.5f * cd + z)));
+	boxes.push_back(box3(vec3(-0.5f * cw - ch + x, 0 + y - 0.5 * cH, 0.5f * cd + ch + z), vec3(0.5f * cw + x, 0.5 * cH + y, 0.5f * cd + z)));
 	box_colors.push_back(trash_bin_clr);
 }
 /// construct a scene with a table
 void vr_cobotics::build_scene(float w, float d, float h, float W, float tw, float td, float th, float tW, float cw, float cd, float ch, float cH, float x, float y, float z)
 {
-	construct_room(w, d, h, W, false, false);
+	construct_room(w, d, h, W, true, true);
 	//construct_table(tw, td, th, tW);
-	construct_environment(0.3f, 3 * w, 3 * d, w, d, h);
+	//construct_environment(0.3f, 3 * w, 3 * d, w, d, h);
 	//construct_environment(0.4f, 0.5f, 1u, w, d, h);
 	//construct_movable_boxes(tw, td, th, tW, 20);
-	/*if (is_trashbin)
-		construct_trash_bin(cw, cd, ch, cH, x, y ,z);*/
+	
 }
 
 vr_cobotics::vr_cobotics() 
@@ -462,7 +460,15 @@ bool vr_cobotics::handle(cgv::gui::event& e)
 					}
 					std::cout << "the number of intersection box: " << intersection_box_indices.size() << std::endl;
 					send_selection(movable_box_id.at(bi));
-					std::cout << "send a message of box " << bi << std::endl;
+					//if (movable_box_type.at(bi) == 1)
+					//{
+						std::cout << "send a message of box " << bi << std::endl;
+					//}
+					/*else if (movable_box_type.at(bi) == 2)
+					{
+						std::cout << "send a message about trash bin!" << bi << std::endl;
+					}*/
+					
 				}
 			}
 			if (trash_bin_select_mode) {
@@ -929,10 +935,28 @@ void vr_cobotics::draw(cgv::render::context& ctx)
 		bwr.disable(ctx);
 	}
 
+	//draw lego boxes
+	cgv::render::box_renderer& lgr = cgv::render::ref_box_renderer(ctx);
+
+	if (lego_boxes.size() > 0)
+	{
+		lgr.set_render_style(movable_style);
+		lgr.set_box_array(ctx, lego_boxes);
+		lgr.set_color_array(ctx, lego_box_colors);
+		lgr.set_translation_array(ctx, lego_box_translations);
+		lgr.set_rotation_array(ctx, lego_box_rotations);
+		if (lgr.validate_and_enable(ctx)) {
+			//glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+			lgr.draw(ctx, 0, lego_boxes.size());
+			//glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+		}
+		lgr.disable(ctx);
+	}
+
 	cgv::render::box_renderer& renderer = cgv::render::ref_box_renderer(ctx);
 
 	// draw wireframe boxes
-	if (frame_boxes.size() > 0) { //pointing the renderer to uninitialized arrays causes assertions in debug mode
+	/*if (frame_boxes.size() > 0) { //pointing the renderer to uninitialized arrays causes assertions in debug mode
 		renderer.set_render_style(wire_frame_style);
 		renderer.set_box_array(ctx, frame_boxes);
 		renderer.set_color_array(ctx, frame_box_colors);
@@ -944,7 +968,7 @@ void vr_cobotics::draw(cgv::render::context& ctx)
 			glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 		}
 		renderer.disable(ctx);
-	}
+	}*/
 
 	
 
@@ -957,7 +981,7 @@ void vr_cobotics::draw(cgv::render::context& ctx)
 
 	// draw table boxes
 	if (table_boxes.size() > 0) { //pointing the renderer to uninitialized arrays causes assertions in debug mode
-		renderer.set_render_style(movable_style);
+		renderer.set_render_style(style);
 		renderer.set_box_array(ctx, table_boxes);
 		renderer.set_color_array(ctx, table_box_colors);
 		renderer.set_translation_array(ctx, table_box_translations);
@@ -973,6 +997,26 @@ void vr_cobotics::draw(cgv::render::context& ctx)
 		sr.set_render_style(srs);
 		sr.render(ctx, 0, intersection_points.size());
 	}
+	//draw trash bin
+	/*if (show_vertices) {
+		sphere_renderer& sr = ref_sphere_renderer(ctx);
+		sr.set_render_style(sphere_style);
+		sr.set_position_array(ctx, M.get_positions());
+		if (M.has_colors())
+			sr.set_color_array(ctx, *reinterpret_cast<const std::vector<rgb>*>(M.get_color_data_vector_ptr()));
+		sr.render(ctx, 0, M.get_nr_positions());
+	}
+	if (show_wireframe) {
+		rounded_cone_renderer& cr = ref_rounded_cone_renderer(ctx);
+		cr.set_render_style(cone_style);
+		if (cr.enable(ctx)) {
+			mesh_info.draw_wireframe(ctx);
+			cr.disable(ctx);
+		}
+	}
+	if (show_surface) {
+		draw_surface(ctx, true);
+	}*/
 
 	// draw label
 	if (vr_view_ptr && label_tex.is_created()) {
@@ -1287,6 +1331,15 @@ void vr_cobotics::clear_movable_boxes()
 	movable_box_rotations.clear();
 	movable_box_colors.clear();
 	movable_box_id.clear();
+	movable_box_type.clear();
+}
+
+void vr_cobotics::clear_lego_boxes()
+{
+	lego_boxes.clear();
+	lego_box_translations.clear();
+	lego_box_rotations.clear();
+	lego_box_colors.clear();
 }
 
 void vr_cobotics::clear_frame_boxes()
@@ -1338,15 +1391,15 @@ void vr_cobotics::buildconnection()
 			isconnected = true;
 			islistened = true;
 		    std::string cube_file_path = QUOTE_SYMBOL_VALUE(INPUT_DIR);
-			redbox = new point_cloud();
+			/*redbox = new point_cloud();
 			greenbox = new point_cloud();
-			bluebox = new point_cloud();
+			bluebox = new point_cloud();*/
 			redM.read(cube_file_path + "/cubes/cube_red.obj");
 			greenM.read(cube_file_path + "/cubes/cube_green.obj");
 			blueM.read(cube_file_path + "/cubes/cube_blue.obj");
-			redbox->read(cube_file_path + "/cubes/cube_red.obj");
+			/*redbox->read(cube_file_path + "/cubes/cube_red.obj");
 			greenbox->read(cube_file_path + "/cubes/cube_green.obj");
-			bluebox->read(cube_file_path + "/cubes/cube_blue.obj");
+			bluebox->read(cube_file_path + "/cubes/cube_blue.obj");*/
 			std::cout << "build connection successfully!" << std::endl;
 		}
 	}
@@ -1414,6 +1467,7 @@ void vr_cobotics::keeplisten()
 			std::cout <<  s << std::endl;
 			if (scene.objects_size() > 0) {
 				clear_movable_boxes();
+				clear_lego_boxes();
 				update_intersections();
 			}
 			std::cout << "n of movable: " << movable_boxes.size() << std::endl;
@@ -1449,14 +1503,24 @@ void vr_cobotics::keeplisten()
 				else {
 					if (object.type() == 1)
 					{
+						lego_boxes.emplace_back(minp, maxp);
+						lego_box_colors.emplace_back(clr);
+						lego_box_translations.emplace_back(trans);
+						lego_box_rotations.emplace_back(rot);
+						movable_box_type.emplace_back(1);
 						std::cout << "this is a box" << std::endl;
 					}
 					else if (object.type() == 2)
 					{
+						is_trashbin = true;
+						if (is_trashbin)
+							construct_trash_bin(clr, object.size().length(), object.size().width(), 0.01f, object.size().height(), trans.x(), trans.y(), trans.z());
+						movable_box_type.emplace_back(2);
 						std::cout << "this is a trash bin" << std::endl;
 					}
 					else if (object.type() == 3)
 					{
+						//movable_box_type.emplace_back(3);
 						std::cout << "this is a robot arm" << std::endl;
 						continue;
 					}
@@ -1465,6 +1529,7 @@ void vr_cobotics::keeplisten()
 					movable_box_rotations.emplace_back(rot);
 					movable_box_colors.emplace_back(clr);
 					movable_box_id.emplace_back(object.id());
+					
 					post_redraw();
 				}
 			}
